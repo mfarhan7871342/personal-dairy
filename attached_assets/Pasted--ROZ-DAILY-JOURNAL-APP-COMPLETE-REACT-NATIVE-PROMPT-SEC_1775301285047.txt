@@ -1,0 +1,126 @@
+===== ROZ — DAILY JOURNAL APP: COMPLETE REACT NATIVE PROMPT =====
+
+[SECTION 1 — PROJECT OVERVIEW]
+Build a complete React Native mobile app called "Roz — Daily Journal" using Expo (managed workflow) and TypeScript. This is a private, secure, and addictive personal diary app targeting all age groups. The UI should be beautiful, modern, and animated — inspired by premium journaling apps but better.
+
+App color scheme: Deep purple (#6C63FF) as primary, soft lavender (#EDE9FE) as background, white cards, with dark mode support. Use custom fonts (expo-google-fonts — Inter + Playfair Display for headings).
+
+[SECTION 2 — TECH STACK]
+Use these exact packages:
+- expo ~51.0.0
+- react-native 0.74
+- typescript ~5.3.0
+- @react-navigation/native + @react-navigation/stack + @react-navigation/bottom-tabs
+- react-native-mmkv (fast encrypted local storage)
+- expo-local-authentication (biometrics/Face ID/fingerprint)
+- expo-image-picker (photo attach)
+- expo-av (voice recording + playback)
+- expo-notifications (daily reminders)
+- react-native-reanimated ~3.10 (all animations)
+- react-native-gesture-handler
+- zustand (global state management)
+- victory-native (mood graph charts)
+- react-native-calendars (calendar view)
+- @expo/vector-icons (Ionicons)
+- expo-file-system (file management)
+- expo-sharing (export diary)
+- expo-haptics (haptic feedback)
+- lottie-react-native (micro-animations)
+
+[SECTION 3 — FOLDER STRUCTURE]
+Create this exact folder structure:
+/app
+  /screens
+    SplashScreen.tsx, LockScreen.tsx, HomeScreen.tsx, WriteEntryScreen.tsx,
+    ViewEntryScreen.tsx, MoodTrackerScreen.tsx, CalendarScreen.tsx,
+    AICompanionScreen.tsx, ThemesScreen.tsx, BadgesScreen.tsx,
+    GalleryScreen.tsx, SettingsScreen.tsx
+  /components
+    EntryCard.tsx, MoodPicker.tsx, StreakBanner.tsx, VoiceRecorder.tsx,
+    PhotoAttacher.tsx, QuoteCard.tsx, BadgeItem.tsx, ThemePreview.tsx,
+    CalendarStrip.tsx, AIMessageBubble.tsx
+  /store
+    useEntryStore.ts, useMoodStore.ts, useSettingsStore.ts, useStreakStore.ts
+  /utils
+    storage.ts, aiHelper.ts, lockHelper.ts, notificationHelper.ts, exportHelper.ts
+  /hooks
+    useLock.ts, useStreak.ts, useQuote.ts
+  /theme
+    colors.ts, typography.ts, spacing.ts
+  /navigation
+    RootNavigator.tsx, TabNavigator.tsx, AuthNavigator.tsx
+  App.tsx
+
+[SECTION 4 — ALL 10 SCREENS]
+
+1. SPLASH SCREEN — Logo Lottie animation, tagline, auto-navigate to Lock after 2s, Reanimated fade-in.
+
+2. LOCK SCREEN — Biometric auth (expo-local-authentication), fallback 4-digit PIN with shake animation on wrong PIN, lock type selectable (None/PIN/Pattern/Biometrics).
+
+3. HOME SCREEN — Good morning greeting + date, streak banner with animated flame, daily quote card (quotable.io API), recent 5 entries as swipeable cards, FAB to create entry, bottom tabs, pull-to-refresh.
+
+4. WRITE ENTRY SCREEN — Title + multiline body input, 8-mood picker row (happy/sad/anxious/excited/calm/angry/grateful/neutral) with emoji + scale animation, bottom toolbar (photo attach via expo-image-picker, voice recording via expo-av with waveform animation, font size toggle, AI help button), theme picker, save with confetti Lottie, auto-save draft every 10s.
+
+5. VIEW ENTRY SCREEN — Full entry display with theme background, mood badge, date/time, photo gallery, voice playback, edit/delete options, share as image/text, "On this day last year" suggestion.
+
+6. CALENDAR SCREEN — Full calendar (react-native-calendars), colored mood dots per day, tap day to see entry or create, swipe month navigation, monthly entry count stat.
+
+7. MOOD TRACKER SCREEN — Weekly mood line chart (victory-native), mood distribution donut chart, "most common mood" insight, mood history list, pattern insights like "You feel anxious on Mondays".
+
+8. AI COMPANION SCREEN — Chat UI with "Roz" AI persona (Claude API), pre-built prompt buttons, AI reads recent entries for personalized responses, typing indicator (3 bouncing dots), Reanimated slide-in message bubbles.
+   API call:
+   fetch('https://api.anthropic.com/v1/messages', { method:'POST', headers:{'Content-Type':'application/json','x-api-key':AI_API_KEY,'anthropic-version':'2023-06-01'}, body: JSON.stringify({ model:'claude-opus-4-5', max_tokens:500, messages:[{role:'user',content:userMessage}] }) })
+
+9. THEMES SCREEN — 30+ theme grid (Nature/Space/Minimal/Vintage/Pastel/Dark categories), live preview on tap, color palette picker, paper style picker (lined/dotted/blank/vintage), active theme checkmark.
+
+10. BADGES SCREEN — All achievement badges grid, earned=full color, unearned=grayed+locked, badges: First Entry/7-Day/30-Day Streak/Night Owl/Early Bird/Photographer/Voice Diaries/AI Explorer/Mood Master/Century, Lottie confetti on unlock, progress bars for in-progress badges.
+
+11. SETTINGS SCREEN — Lock type selection, reminder time picker, default theme, font preference, export entries, clear data, language (English/Urdu).
+
+[SECTION 5 — DATA MODELS]
+
+interface DiaryEntry {
+  id: string; title: string; body: string; mood: MoodType;
+  photos: string[]; voiceUri?: string; voiceDuration?: number;
+  createdAt: string; updatedAt: string; themeId: string;
+  isFavorite: boolean; tags: string[];
+}
+type MoodType = 'happy'|'sad'|'anxious'|'excited'|'calm'|'angry'|'grateful'|'neutral';
+interface UserSettings {
+  lockType: 'none'|'pin'|'biometrics'|'pattern'; pin?: string;
+  reminderEnabled: boolean; reminderTime: string; themeId: string;
+  fontSize: 'small'|'medium'|'large'; userName: string; language: 'en'|'ur';
+}
+interface StreakData {
+  currentStreak: number; longestStreak: number;
+  lastEntryDate: string; totalEntries: number; unlockedBadges: string[];
+}
+
+Zustand stores: useEntryStore (CRUD + queries), useSettingsStore, useStreakStore (auto badge unlock), useMoodStore (stats).
+
+[SECTION 6 — ANIMATIONS + UX]
+- Reanimated v3 throughout: FadeInDown stagger on lists, spring scale on mood picker, FAB rotate+scale, badge Lottie confetti, PIN shake on wrong entry, voice waveform sine animation, AI typing 3-dot pulse.
+- expo-haptics on all taps and badge unlocks.
+- Skeleton loaders on all async operations.
+- Swipe-to-delete with 3s undo snackbar.
+- Full dark mode via theme/colors.ts.
+- Keyboard avoiding view on all input screens.
+
+[SECTION 7 — NOTIFICATIONS + STREAKS]
+- Daily reminder via expo-notifications at user-set time.
+- Streak-at-risk notification at 9pm if no entry today.
+- Badge unlock notifications.
+- Streak logic: increment if entry today AND yesterday, reset if gap, badge thresholds: [1,7,14,30,60,100].
+- Quotes: fetch quotable.io, cache 10 in MMKV, fallback hardcoded 30, date-based daily rotation.
+
+[SECTION 8 — OUTPUT INSTRUCTIONS]
+Build screen by screen in this order:
+1. theme/colors.ts + typography.ts
+2. All 4 zustand stores
+3. utils/storage.ts + lockHelper.ts
+4. navigation/RootNavigator.tsx
+5. LockScreen.tsx → HomeScreen.tsx → WriteEntryScreen.tsx → remaining screens
+
+For each file: complete .tsx with all imports, StyleSheet, store wiring, animations, empty/loading/error states. Production-ready, no TODO comments. After each file ask "Ready for next file?" before continuing.
+
+===== END OF PROMPT =====
