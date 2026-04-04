@@ -9,4 +9,6 @@ config.resolver.blockList = [
   /\.local\/state\/.*/,
 ];
 
+config.resolver.unstable_conditionNames = ['react-native', 'require', 'default'];
+
 module.exports = config;

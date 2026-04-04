@@ -1,35 +1,67 @@
-import { Tabs } from 'expo-router';
 import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Platform } from 'react-native';
+import { useColors } from '@/hooks/useColors';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const colors = useColors();
+  const topPad = Platform.OS === 'web' ? 67 : 0;
+  const tabBarHeight = Platform.OS === 'web' ? 84 : 0;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.mutedForeground,
+        tabBarStyle: {
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.tabBarBorder,
+          borderTopWidth: 1,
+          height: Platform.OS === 'web' ? 84 : undefined,
+          paddingBottom: Platform.OS === 'web' ? 34 : undefined,
+          paddingTop: 4,
+        },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="calendar"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Calendar',
+          tabBarIcon: ({ color }) => <Ionicons name="calendar" size={22} color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="mood"
+        options={{
+          title: 'Mood',
+          tabBarIcon: ({ color }) => <Ionicons name="stats-chart" size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="badges"
+        options={{
+          title: 'Badges',
+          tabBarIcon: ({ color }) => <Ionicons name="trophy" size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <Ionicons name="settings" size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );
 }

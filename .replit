@@ -22,15 +22,15 @@ name = "Start Frontend"
 author = "agent"
 
 [workflows.workflow.metadata]
-outputType = "console"
+outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx expo start --web --port 8080"
-waitForPort = 8080
+args = "npx expo start --web --port 5000"
+waitForPort = 5000
 
 [[ports]]
-localPort = 8080
+localPort = 5000
 externalPort = 80
 
 [deployment]
