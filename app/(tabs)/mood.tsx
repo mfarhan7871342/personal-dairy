@@ -5,7 +5,7 @@ import Svg, { Rect, Text as SvgText, Circle, Path } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useEntryStore, MoodType } from '@/store/entryStore';
-import { MOOD_COLORS, MOOD_ICONS, MOOD_LABELS } from '@/constants/colors';
+import { MOOD_COLORS, MOOD_EMOJIS, MOOD_ICONS, MOOD_LABELS } from '@/constants/colors';
 
 const MOODS: MoodType[] = ['happy', 'excited', 'grateful', 'calm', 'neutral', 'sad', 'anxious', 'angry'];
 const CHART_W = Dimensions.get('window').width - 64;
@@ -75,14 +75,15 @@ export default function MoodScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 16 }]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>Mood Tracker</Text>
+      <View style={[styles.header, { paddingTop: topPad + 16, backgroundColor: colors.primary }]}>
+        <Text style={styles.headerTitle}>😊 Mood Tracker</Text>
+        <Text style={styles.headerSub}>Track how you feel over time</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 20 }}>
         {entries.length === 0 ? (
           <View style={[styles.empty, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Ionicons name="happy" size={44} color={colors.primary + '50'} />
+            <Text style={{ fontSize: 56 }}>😌</Text>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No mood data yet</Text>
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Start journaling to see your mood patterns</Text>
           </View>
@@ -92,7 +93,7 @@ export default function MoodScreen() {
               <View style={[styles.insightCard, { backgroundColor: colors.primary, marginHorizontal: 16, marginBottom: 16 }]}>
                 <Text style={styles.insightLabel}>Most Common Mood</Text>
                 <View style={styles.insightRow}>
-                  <Ionicons name={MOOD_ICONS[topMood] as any} size={32} color="#fff" />
+                  <Text style={{ fontSize: 36 }}>{MOOD_EMOJIS[topMood]}</Text>
                   <Text style={styles.insightMood}>{MOOD_LABELS[topMood]}</Text>
                 </View>
                 <Text style={styles.insightCount}>{stats[topMood]} entries</Text>
@@ -114,7 +115,7 @@ export default function MoodScreen() {
               <View style={styles.grid}>
                 {MOODS.filter((m) => stats[m] > 0).map((mood) => (
                   <View key={mood} style={[styles.moodStat, { backgroundColor: MOOD_COLORS[mood] + '18', borderColor: MOOD_COLORS[mood] + '40' }]}>
-                    <Ionicons name={MOOD_ICONS[mood] as any} size={20} color={MOOD_COLORS[mood]} />
+                    <Text style={{ fontSize: 22 }}>{MOOD_EMOJIS[mood]}</Text>
                     <Text style={[styles.moodCount, { color: colors.foreground }]}>{stats[mood]}</Text>
                     <Text style={[styles.moodName, { color: colors.mutedForeground }]}>{MOOD_LABELS[mood]}</Text>
                   </View>
@@ -139,7 +140,7 @@ export default function MoodScreen() {
                         </Text>
                       </View>
                       <View style={[styles.recentMood, { backgroundColor: color + '20' }]}>
-                        <Ionicons name={MOOD_ICONS[entry.mood] as any} size={14} color={color} />
+                        <Text style={{ fontSize: 16 }}>{MOOD_EMOJIS[entry.mood]}</Text>
                       </View>
                     </View>
                   );
@@ -155,8 +156,9 @@ export default function MoodScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 16 },
-  title: { fontSize: 28, fontWeight: '800' },
+  header: { paddingHorizontal: 20, paddingBottom: 24, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, marginBottom: 16 },
+  headerTitle: { fontSize: 26, fontWeight: '800', color: '#fff' },
+  headerSub: { fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
   empty: { marginHorizontal: 16, marginTop: 40, borderRadius: 20, padding: 40, alignItems: 'center', gap: 8, borderWidth: 1 },
   emptyTitle: { fontSize: 16, fontWeight: '700', marginTop: 8 },
   emptyText: { fontSize: 13, textAlign: 'center', lineHeight: 18 },

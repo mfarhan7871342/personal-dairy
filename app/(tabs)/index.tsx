@@ -3,7 +3,6 @@ import {
   StyleSheet, Text, View, ScrollView, TouchableOpacity,
   RefreshControl, Platform,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +11,6 @@ import { useColors } from '@/hooks/useColors';
 import { useEntryStore } from '@/store/entryStore';
 import { useStreakStore } from '@/store/streakStore';
 import { EntryCard } from '@/components/EntryCard';
-import { StreakBanner } from '@/components/StreakBanner';
 import { QuoteCard } from '@/components/QuoteCard';
 
 export default function HomeScreen() {
@@ -46,65 +44,97 @@ export default function HomeScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 20 }}
+        contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 100 : insets.bottom + 80 }}
       >
-        <View style={[styles.header, { paddingTop: topPad + 16 }]}>
-          <View>
-            <Text style={[styles.greeting, { color: colors.mutedForeground }]}>{greeting}</Text>
-            <Text style={[styles.appName, { color: colors.foreground }]}>Roz</Text>
-            <Text style={[styles.date, { color: colors.mutedForeground }]}>{dateStr}</Text>
+        {/* Purple gradient header */}
+        <View style={[styles.header, { paddingTop: topPad + 16, backgroundColor: colors.primary }]}>
+          <View style={styles.headerTop}>
+            <View>
+              <Text style={styles.greetingText}>{greeting} 👋</Text>
+              <Text style={styles.appTitle}>Roz Journal</Text>
+              <Text style={styles.dateLabel}>{dateStr}</Text>
+            </View>
+            <View style={styles.headerActions}>
+              <TouchableOpacity onPress={() => router.push('/ai')} style={styles.headerBtn}>
+                <Ionicons name="sparkles" size={22} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/themes')} style={styles.headerBtn}>
+                <Ionicons name="color-palette" size={22} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity onPress={() => router.push('/ai')} style={[styles.iconBtn, { backgroundColor: colors.primary + '15' }]}>
-              <Ionicons name="sparkles" size={20} color={colors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/themes')} style={[styles.iconBtn, { backgroundColor: colors.muted }]}>
-              <Ionicons name="color-palette" size={20} color={colors.foreground} />
-            </TouchableOpacity>
+
+          {/* Stats row */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statEmoji}>🔥</Text>
+              <Text style={styles.statNum}>{currentStreak}</Text>
+              <Text style={styles.statLabel}>Day Streak</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statEmoji}>📖</Text>
+              <Text style={styles.statNum}>{totalEntries}</Text>
+              <Text style={styles.statLabel}>Entries</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statEmoji}>📅</Text>
+              <Text style={styles.statNum}>{new Date().getDate()}</Text>
+              <Text style={styles.statLabel}>Day of Month</Text>
+            </View>
           </View>
         </View>
 
-        <Animated.View entering={FadeInDown.delay(100).springify()}>
-          <StreakBanner streak={currentStreak} totalEntries={totalEntries} />
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(200).springify()} style={{ marginTop: 12 }}>
+        {/* Quote */}
+        <View style={{ marginTop: 20, marginBottom: 8 }}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>✨ Daily Inspiration</Text>
           <QuoteCard key={quoteKey} />
-        </Animated.View>
+        </View>
 
-        <Animated.View entering={FadeInDown.delay(300).springify()}>
+        {/* Recent Entries */}
+        <View style={styles.entriesSection}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Recent Entries</Text>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>📝 Recent Entries</Text>
             {entries.length > 5 && (
               <TouchableOpacity onPress={() => router.push('/(tabs)/calendar')}>
-                <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>See all →</Text>
               </TouchableOpacity>
             )}
           </View>
-        </Animated.View>
 
-        {recent.length === 0 ? (
-          <Animated.View entering={FadeInDown.delay(400).springify()} style={[styles.empty, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Ionicons name="journal" size={44} color={colors.primary + '50'} />
-            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Your story starts here</Text>
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Tap the + button below to write your first entry</Text>
-          </Animated.View>
-        ) : (
-          <View style={styles.list}>
-            {recent.map((entry, i) => (
-              <Animated.View key={entry.id} entering={FadeInDown.delay(300 + i * 60).springify()}>
+          {recent.length === 0 ? (
+            <View style={[styles.empty, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Text style={styles.emptyEmoji}>📔</Text>
+              <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Your story starts here</Text>
+              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                Tap the + button to write your first entry
+              </Text>
+              <TouchableOpacity onPress={handleWrite} style={[styles.startBtn, { backgroundColor: colors.primary }]}>
+                <Text style={styles.startBtnText}>Write now ✏️</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.list}>
+              {recent.map((entry) => (
                 <EntryCard
+                  key={entry.id}
                   entry={entry}
                   onPress={() => router.push(`/entry/${entry.id}`)}
                 />
-              </Animated.View>
-            ))}
-          </View>
-        )}
+              ))}
+            </View>
+          )}
+        </View>
       </ScrollView>
 
-      <TouchableOpacity style={[styles.fab, { backgroundColor: colors.primary, shadowColor: colors.primary }]} onPress={handleWrite} activeOpacity={0.85}>
-        <Ionicons name="add" size={28} color="#fff" />
+      {/* FAB */}
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
+        onPress={handleWrite}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add" size={30} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -112,18 +142,35 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 20, paddingBottom: 16 },
-  greeting: { fontSize: 13, fontWeight: '500' },
-  appName: { fontSize: 34, fontWeight: '800', letterSpacing: -1 },
-  date: { fontSize: 12, marginTop: 2 },
-  headerActions: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginTop: 20, marginBottom: 12 },
-  sectionTitle: { fontSize: 17, fontWeight: '700' },
-  seeAll: { fontSize: 13, fontWeight: '600' },
+  header: { paddingHorizontal: 20, paddingBottom: 24, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
+  greetingText: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
+  appTitle: { fontSize: 30, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  dateLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  headerActions: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  headerBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  statsRow: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 16 },
+  statItem: { flex: 1, alignItems: 'center', gap: 2 },
+  statEmoji: { fontSize: 20 },
+  statNum: { fontSize: 22, fontWeight: '900', color: '#fff' },
+  statLabel: { fontSize: 10, color: 'rgba(255,255,255,0.7)', textAlign: 'center' },
+  statDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.3)', marginHorizontal: 8 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 17, fontWeight: '800', marginHorizontal: 20, marginBottom: 12 },
+  seeAll: { fontSize: 13, fontWeight: '700', marginRight: 20 },
+  entriesSection: { marginTop: 8 },
   list: { paddingHorizontal: 16 },
-  empty: { marginHorizontal: 16, borderRadius: 20, padding: 36, alignItems: 'center', gap: 8, borderWidth: 1 },
-  emptyTitle: { fontSize: 16, fontWeight: '700', marginTop: 8 },
+  empty: { marginHorizontal: 16, borderRadius: 20, padding: 36, alignItems: 'center', gap: 10, borderWidth: 1 },
+  emptyEmoji: { fontSize: 48, marginBottom: 4 },
+  emptyTitle: { fontSize: 18, fontWeight: '800' },
   emptyText: { fontSize: 13, textAlign: 'center', lineHeight: 18 },
-  fab: { position: 'absolute', right: 20, bottom: Platform.OS === 'web' ? 100 : 80, width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 },
+  startBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24, marginTop: 8 },
+  startBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  fab: {
+    position: 'absolute', right: 20,
+    bottom: Platform.OS === 'web' ? 100 : 88,
+    width: 62, height: 62, borderRadius: 31,
+    alignItems: 'center', justifyContent: 'center',
+    shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.45, shadowRadius: 14, elevation: 10,
+  },
 });

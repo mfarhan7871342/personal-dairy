@@ -1,35 +1,39 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   StyleSheet, Text, View, ScrollView, TouchableOpacity,
-  Switch, TextInput, Alert, Platform,
+  TextInput, Alert, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '@/hooks/useColors';
-import { useSettingsStore, LockType } from '@/store/settingsStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useEntryStore } from '@/store/entryStore';
 import { useStreakStore } from '@/store/streakStore';
 
-function SettingRow({
-  icon, label, value, onPress, children, danger,
-}: { icon: string; label: string; value?: string; onPress?: () => void; children?: React.ReactNode; danger?: boolean }) {
+function Row({
+  icon, emoji, label, value, onPress, danger, children,
+}: { icon: string; emoji?: string; label: string; value?: string; onPress?: () => void; danger?: boolean; children?: React.ReactNode }) {
   const colors = useColors();
   return (
     <TouchableOpacity
-      style={[styles.row, { borderColor: colors.border }]}
+      style={[styles.row, { borderBottomColor: colors.border }]}
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
-      disabled={!onPress && !children}
+      disabled={!onPress}
     >
-      <View style={[styles.rowIcon, { backgroundColor: danger ? colors.error + '15' : colors.primary + '15' }]}>
-        <Ionicons name={icon as any} size={18} color={danger ? colors.error : colors.primary} />
+      <View style={[styles.rowIcon, { backgroundColor: danger ? colors.error + '18' : colors.primary + '18' }]}>
+        {emoji ? (
+          <Text style={{ fontSize: 18 }}>{emoji}</Text>
+        ) : (
+          <Ionicons name={icon as any} size={18} color={danger ? colors.error : colors.primary} />
+        )}
       </View>
       <Text style={[styles.rowLabel, { color: danger ? colors.error : colors.foreground }]}>{label}</Text>
-      <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        {value && <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>{value}</Text>}
+      <View style={styles.rowRight}>
         {children}
+        {value && <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>{value}</Text>}
         {onPress && <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />}
       </View>
     </TouchableOpacity>
@@ -54,55 +58,36 @@ export default function SettingsScreen() {
   const { settings, updateSettings, lock } = useSettingsStore();
   const { clearAll: clearEntries } = useEntryStore();
   const { resetAll: resetStreak } = useStreakStore();
-  const [editingPin, setEditingPin] = useState(false);
-  const [pinInput, setPinInput] = useState('');
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
 
-  const handleLockType = (type: LockType) => {
-    if (type === 'pin' && !settings.pin) {
-      setEditingPin(true);
-      return;
-    }
-    updateSettings({ lockType: type });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
-
-  const savePin = () => {
-    if (pinInput.length !== 4 || !/^\d+$/.test(pinInput)) {
-      Alert.alert('Invalid PIN', 'PIN must be exactly 4 digits.');
-      return;
-    }
-    updateSettings({ pin: pinInput, lockType: 'pin' });
-    setEditingPin(false);
-    setPinInput('');
-  };
-
   const handleClearData = () => {
-    Alert.alert('Clear All Data', 'This will permanently delete all your journal entries and reset your streak. This cannot be undone.', [
+    Alert.alert('Clear All Data', 'This permanently deletes all journal entries and resets your streak.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete Everything', style: 'destructive',
-        onPress: () => { clearEntries(); resetStreak(); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); },
+        onPress: () => { clearEntries(); resetStreak(); },
       },
     ]);
   };
 
   const handleLock = () => {
-    if (settings.lockType === 'none') return;
+    if (settings.lockType === 'none') {
+      router.push('/lock-type');
+      return;
+    }
     lock();
     router.replace('/lock');
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 16 }]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>Settings</Text>
-      </View>
-
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 20 }}>
-        <View style={[styles.profileCard, { backgroundColor: colors.primary }]}>
-          <View style={styles.avatar}>
-            <Ionicons name="person" size={32} color="#fff" />
+        {/* Purple profile header */}
+        <View style={[styles.profileHeader, { paddingTop: topPad + 16, backgroundColor: colors.primary }]}>
+          <View style={styles.avatarWrap}>
+            <View style={styles.avatar}>
+              <Ionicons name="person" size={36} color="#fff" />
+            </View>
           </View>
           <TextInput
             value={settings.userName}
@@ -111,53 +96,39 @@ export default function SettingsScreen() {
             placeholderTextColor="rgba(255,255,255,0.5)"
             style={styles.nameInput}
           />
+          <Text style={styles.profileSub}>Roz — Daily Journal</Text>
+        </View>
+
+        {/* Quick access */}
+        <View style={styles.quickRow}>
+          <TouchableOpacity onPress={() => router.push('/lock-type')} style={[styles.quickItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.quickIcon, { backgroundColor: '#7C3AED20' }]}>
+              <Ionicons name="lock-closed" size={22} color={colors.primary} />
+            </View>
+            <Text style={[styles.quickLabel, { color: colors.foreground }]}>Password</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/themes')} style={[styles.quickItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.quickIcon, { backgroundColor: '#EC489920' }]}>
+              <Ionicons name="color-palette" size={22} color="#EC4899" />
+            </View>
+            <Text style={[styles.quickLabel, { color: colors.foreground }]}>Themes</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.quickItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.quickIcon, { backgroundColor: '#F59E0B20' }]}>
+              <Ionicons name="notifications" size={22} color="#F59E0B" />
+            </View>
+            <Text style={[styles.quickLabel, { color: colors.foreground }]}>Reminders</Text>
+          </TouchableOpacity>
         </View>
 
         <Section title="SECURITY">
-          <SettingRow icon="lock-closed" label="Lock App" value={settings.lockType === 'none' ? 'Off' : settings.lockType} onPress={handleLock} />
-          <SettingRow icon="keypad" label="PIN Lock" onPress={() => handleLockType('pin')}>
-            <Switch
-              value={settings.lockType === 'pin'}
-              onValueChange={(v) => handleLockType(v ? 'pin' : 'none')}
-              trackColor={{ true: colors.primary }}
-            />
-          </SettingRow>
-          <SettingRow icon="finger-print" label="Biometrics" onPress={() => handleLockType('biometrics')}>
-            <Switch
-              value={settings.lockType === 'biometrics'}
-              onValueChange={(v) => handleLockType(v ? 'biometrics' : 'none')}
-              trackColor={{ true: colors.primary }}
-            />
-          </SettingRow>
+          <Row icon="lock-closed" emoji="🔒" label="Lock App" value={settings.lockType === 'none' ? 'Off' : settings.lockType} onPress={handleLock} />
+          <Row icon="keypad" emoji="🔢" label="Change Lock Type" value="" onPress={() => router.push('/lock-type')} />
         </Section>
 
-        {editingPin && (
-          <View style={[styles.pinEdit, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.pinLabel, { color: colors.foreground }]}>Enter new 4-digit PIN</Text>
-            <TextInput
-              value={pinInput}
-              onChangeText={(t) => setPinInput(t.replace(/\D/g, '').substring(0, 4))}
-              keyboardType="number-pad"
-              maxLength={4}
-              secureTextEntry
-              style={[styles.pinInput, { color: colors.foreground, borderColor: colors.primary, backgroundColor: colors.muted }]}
-              placeholder="••••"
-              placeholderTextColor={colors.mutedForeground}
-            />
-            <View style={styles.pinActions}>
-              <TouchableOpacity onPress={() => setEditingPin(false)} style={[styles.pinBtn, { backgroundColor: colors.muted }]}>
-                <Text style={[styles.pinBtnText, { color: colors.foreground }]}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={savePin} style={[styles.pinBtn, { backgroundColor: colors.primary }]}>
-                <Text style={[styles.pinBtnText, { color: '#fff' }]}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
         <Section title="APPEARANCE">
-          <SettingRow icon="color-palette" label="Themes" onPress={() => router.push('/themes')} value={settings.themeId} />
-          <SettingRow icon="text" label="Font Size" value={settings.fontSize}>
+          <Row icon="color-palette" emoji="🎨" label="Themes" onPress={() => router.push('/themes')} value={settings.themeId} />
+          <Row icon="text" emoji="Aa" label="Font Size">
             <View style={styles.fontRow}>
               {(['small', 'medium', 'large'] as const).map((s) => (
                 <TouchableOpacity
@@ -165,26 +136,26 @@ export default function SettingsScreen() {
                   onPress={() => updateSettings({ fontSize: s })}
                   style={[styles.fontBtn, { backgroundColor: settings.fontSize === s ? colors.primary : colors.muted }]}
                 >
-                  <Text style={{ color: settings.fontSize === s ? '#fff' : colors.mutedForeground, fontSize: 11, fontWeight: '600', textTransform: 'capitalize' }}>{s}</Text>
+                  <Text style={{ color: settings.fontSize === s ? '#fff' : colors.mutedForeground, fontSize: 11, fontWeight: '700', textTransform: 'capitalize' }}>{s}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-          </SettingRow>
+          </Row>
         </Section>
 
-        <Section title="AI">
-          <SettingRow icon="key" label="Claude API Key" onPress={() => router.push('/ai')}>
+        <Section title="AI COMPANION">
+          <Row icon="key" emoji="🤖" label="Claude API Key" onPress={() => router.push('/ai')}>
             <Text style={{ color: settings.aiApiKey ? colors.success : colors.mutedForeground, fontSize: 12 }}>
-              {settings.aiApiKey ? 'Set' : 'Not set'}
+              {settings.aiApiKey ? '✓ Set' : 'Not set'}
             </Text>
-          </SettingRow>
+          </Row>
         </Section>
 
         <Section title="DATA">
-          <SettingRow icon="trash" label="Clear All Data" onPress={handleClearData} danger />
+          <Row icon="trash" emoji="🗑️" label="Clear All Data" onPress={handleClearData} danger />
         </Section>
 
-        <Text style={[styles.version, { color: colors.mutedForeground }]}>Roz — Daily Journal v1.0</Text>
+        <Text style={[styles.version, { color: colors.mutedForeground }]}>Roz — Daily Journal v1.0 ✨</Text>
       </ScrollView>
     </View>
   );
@@ -192,25 +163,24 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 16 },
-  title: { fontSize: 28, fontWeight: '800' },
-  profileCard: { marginHorizontal: 16, marginBottom: 20, borderRadius: 20, padding: 24, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  nameInput: { flex: 1, fontSize: 18, fontWeight: '700', color: '#fff' },
-  section: { marginBottom: 8 },
+  profileHeader: { paddingHorizontal: 20, paddingBottom: 28, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, alignItems: 'center', gap: 8 },
+  avatarWrap: { marginBottom: 4 },
+  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)' },
+  nameInput: { fontSize: 20, fontWeight: '800', color: '#fff', textAlign: 'center' },
+  profileSub: { fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: '500' },
+  quickRow: { flexDirection: 'row', gap: 10, marginHorizontal: 16, marginTop: 16, marginBottom: 8 },
+  quickItem: { flex: 1, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10, alignItems: 'center', gap: 8, borderWidth: 1 },
+  quickIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  quickLabel: { fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  section: { marginBottom: 8, marginTop: 8 },
   sectionTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 1, marginHorizontal: 20, marginBottom: 6 },
   sectionCard: { marginHorizontal: 16, borderRadius: 16, borderWidth: 1, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: 1, gap: 12 },
-  rowIcon: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  rowLabel: { fontSize: 15, fontWeight: '500' },
+  rowIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  rowLabel: { flex: 1, fontSize: 15, fontWeight: '600' },
+  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   rowValue: { fontSize: 13 },
-  pinEdit: { marginHorizontal: 16, marginBottom: 8, borderRadius: 16, padding: 20, borderWidth: 1, gap: 12 },
-  pinLabel: { fontSize: 14, fontWeight: '600' },
-  pinInput: { fontSize: 24, textAlign: 'center', letterSpacing: 12, borderRadius: 12, padding: 16, borderWidth: 2 },
-  pinActions: { flexDirection: 'row', gap: 10 },
-  pinBtn: { flex: 1, borderRadius: 10, padding: 12, alignItems: 'center' },
-  pinBtnText: { fontWeight: '700', fontSize: 14 },
   fontRow: { flexDirection: 'row', gap: 6 },
-  fontBtn: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  fontBtn: { flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: 'center' },
   version: { textAlign: 'center', fontSize: 12, marginTop: 20, marginBottom: 8 },
 });

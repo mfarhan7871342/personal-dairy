@@ -1,13 +1,18 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import { Platform, Text } from 'react-native';
 import { useColors } from '@/hooks/useColors';
+
+function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+  return (
+    <Text style={{ fontSize: focused ? 24 : 20, opacity: focused ? 1 : 0.55 }}>
+      {emoji}
+    </Text>
+  );
+}
 
 export default function TabLayout() {
   const colors = useColors();
-  const topPad = Platform.OS === 'web' ? 67 : 0;
-  const tabBarHeight = Platform.OS === 'web' ? 84 : 0;
 
   return (
     <Tabs
@@ -20,45 +25,45 @@ export default function TabLayout() {
           borderTopColor: colors.tabBarBorder,
           borderTopWidth: 1,
           height: Platform.OS === 'web' ? 84 : undefined,
-          paddingBottom: Platform.OS === 'web' ? 34 : undefined,
-          paddingTop: 4,
+          paddingBottom: Platform.OS === 'web' ? 28 : undefined,
+          paddingTop: 6,
         },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '700', marginTop: -2 },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={22} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
           title: 'Calendar',
-          tabBarIcon: ({ color }) => <Ionicons name="calendar" size={22} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="mood"
         options={{
           title: 'Mood',
-          tabBarIcon: ({ color }) => <Ionicons name="stats-chart" size={22} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="😊" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="badges"
         options={{
           title: 'Badges',
-          tabBarIcon: ({ color }) => <Ionicons name="trophy" size={22} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🏆" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <Ionicons name="settings" size={22} color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="⚙️" focused={focused} />,
         }}
       />
       <Tabs.Screen name="explore" options={{ href: null }} />

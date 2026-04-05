@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -10,13 +10,13 @@ export const unstable_settings = { anchor: '(tabs)' };
 
 export default function RootLayout() {
   const scheme = useColorScheme();
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="lock" />
+          <Stack.Screen name="lock-type" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="write" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="entry/[id]" options={{ animation: 'slide_from_right' }} />

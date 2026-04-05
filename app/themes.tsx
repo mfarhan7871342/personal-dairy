@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Platform } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,16 +7,25 @@ import * as Haptics from 'expo-haptics';
 import { useColors } from '@/hooks/useColors';
 import { useSettingsStore } from '@/store/settingsStore';
 
-const THEMES = [
-  { id: 'lavender', label: 'Lavender', color: '#6C63FF', bg: '#F8F7FF', accent: '#A78BFA', desc: 'Classic & elegant' },
-  { id: 'ocean', label: 'Ocean', color: '#0984E3', bg: '#EDF6FF', accent: '#74B9FF', desc: 'Calm & focused' },
-  { id: 'forest', label: 'Forest', color: '#00B894', bg: '#F0FFF8', accent: '#55EFC4', desc: 'Fresh & natural' },
-  { id: 'sunset', label: 'Sunset', color: '#E17055', bg: '#FFF5F2', accent: '#FDCB6E', desc: 'Warm & energetic' },
-  { id: 'rose', label: 'Rose', color: '#E84393', bg: '#FFF0F8', accent: '#FD79A8', desc: 'Bold & romantic' },
-  { id: 'midnight', label: 'Midnight', color: '#6C5CE7', bg: '#1A1A2E', accent: '#A29BFE', desc: 'Dark & mysterious' },
-  { id: 'peach', label: 'Peach', color: '#FF7675', bg: '#FFF5F5', accent: '#FFEAA7', desc: 'Sweet & playful' },
-  { id: 'sage', label: 'Sage', color: '#6C8C6C', bg: '#F5F8F5', accent: '#A8D5A2', desc: 'Minimal & peaceful' },
-  { id: 'gold', label: 'Gold', color: '#FDCB6E', bg: '#FFFBF0', accent: '#E17055', desc: 'Rich & premium' },
+const ILLUSTRATIONS = [
+  { id: 'lavender', emoji: '💜', label: 'Lavender', bg: ['#6C63FF', '#A78BFA'], desc: 'Classic & elegant' },
+  { id: 'midnight', emoji: '🌌', label: 'Midnight', bg: ['#1A0533', '#4C1D95'], desc: 'Dark & mysterious' },
+  { id: 'galaxy', emoji: '✨', label: 'Galaxy', bg: ['#0F0620', '#7C3AED'], desc: 'Cosmic vibes' },
+  { id: 'ocean', emoji: '🌊', label: 'Ocean', bg: ['#0369A1', '#38BDF8'], desc: 'Calm & focused' },
+  { id: 'forest', emoji: '🌿', label: 'Forest', bg: ['#064E3B', '#10B981'], desc: 'Fresh & natural' },
+  { id: 'sunset', emoji: '🌅', label: 'Sunset', bg: ['#9A3412', '#FB923C'], desc: 'Warm & energetic' },
+  { id: 'rose', emoji: '🌸', label: 'Rose', bg: ['#9D174D', '#F472B6'], desc: 'Bold & romantic' },
+  { id: 'moon', emoji: '🌙', label: 'Moon', bg: ['#1E1B4B', '#818CF8'], desc: 'Dreamy & soft' },
+  { id: 'peach', emoji: '🍑', label: 'Peach', bg: ['#C2410C', '#FCA5A5'], desc: 'Sweet & playful' },
+];
+
+const COLORS_THEMES = [
+  { id: 'white', label: 'Clean White', color: '#F8F7FF', accent: '#7C3AED' },
+  { id: 'parchment', label: 'Parchment', color: '#FDF8EE', accent: '#92400E' },
+  { id: 'mint', label: 'Mint', color: '#F0FDF4', accent: '#16A34A' },
+  { id: 'blush', label: 'Blush', color: '#FFF1F2', accent: '#E11D48' },
+  { id: 'sky', label: 'Sky', color: '#F0F9FF', accent: '#0284C7' },
+  { id: 'lavenderLight', label: 'Lavender', color: '#FAF5FF', accent: '#7C3AED' },
 ];
 
 export default function ThemesScreen() {
@@ -25,6 +33,7 @@ export default function ThemesScreen() {
   const insets = useSafeAreaInsets();
   const { settings, updateSettings } = useSettingsStore();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const [tab, setTab] = useState<'illustrations' | 'colors'>('illustrations');
 
   const handleSelect = (id: string) => {
     updateSettings({ themeId: id });
@@ -33,48 +42,98 @@ export default function ThemesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 8, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={[styles.iconBtn, { backgroundColor: colors.muted }]}>
-          <Ionicons name="close" size={20} color={colors.foreground} />
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: topPad + 8, backgroundColor: colors.primary }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.foreground }]}>Themes</Text>
-        <View style={{ width: 36 }} />
+        <Text style={styles.headerTitle}>Themes</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.doneBtn}>
+          <Ionicons name="checkmark" size={22} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Tabs */}
+      <View style={[styles.tabRow, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          style={[styles.tab, { borderBottomColor: tab === 'illustrations' ? colors.primary : 'transparent', borderBottomWidth: 2.5 }]}
+          onPress={() => setTab('illustrations')}
+        >
+          <Text style={[styles.tabText, { color: tab === 'illustrations' ? colors.primary : colors.mutedForeground }]}>
+            Illustrations
+          </Text>
+        </TouchableOpacity>
+        <View style={[styles.tabSep, { backgroundColor: colors.border }]} />
+        <TouchableOpacity
+          style={[styles.tab, { borderBottomColor: tab === 'colors' ? colors.primary : 'transparent', borderBottomWidth: 2.5 }]}
+          onPress={() => setTab('colors')}
+        >
+          <Text style={[styles.tabText, { color: tab === 'colors' ? colors.primary : colors.mutedForeground }]}>
+            Colors
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 20 }}
+        contentContainerStyle={{ padding: 12, paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 20 }}
       >
-        {THEMES.map((theme, i) => {
-          const selected = settings.themeId === theme.id;
-          return (
-            <Animated.View key={theme.id} entering={FadeInDown.delay(i * 40).springify()}>
-              <TouchableOpacity
-                onPress={() => handleSelect(theme.id)}
-                style={[
-                  styles.themeCard,
-                  { backgroundColor: theme.bg, borderColor: selected ? theme.color : 'transparent', borderWidth: selected ? 2 : 1 },
-                ]}
-                activeOpacity={0.85}
-              >
-                <View style={styles.palette}>
-                  {[theme.color, theme.accent, theme.bg].map((c, j) => (
-                    <View key={j} style={[styles.swatch, { backgroundColor: c, borderColor: 'rgba(0,0,0,0.08)' }]} />
-                  ))}
-                </View>
-                <View style={styles.themeInfo}>
-                  <Text style={[styles.themeName, { color: theme.color }]}>{theme.label}</Text>
-                  <Text style={[styles.themeDesc, { color: '#666' }]}>{theme.desc}</Text>
-                </View>
-                {selected && (
-                  <View style={[styles.check, { backgroundColor: theme.color }]}>
-                    <Ionicons name="checkmark" size={16} color="#fff" />
+        {tab === 'illustrations' ? (
+          <View style={styles.grid}>
+            {ILLUSTRATIONS.map((theme) => {
+              const selected = settings.themeId === theme.id;
+              return (
+                <TouchableOpacity
+                  key={theme.id}
+                  onPress={() => handleSelect(theme.id)}
+                  activeOpacity={0.85}
+                  style={[
+                    styles.illustCard,
+                    { borderWidth: selected ? 3 : 0, borderColor: '#fff' },
+                  ]}
+                >
+                  <View style={[styles.illustBg, { backgroundColor: theme.bg[0] }]}>
+                    <View style={[styles.illustGradient, { backgroundColor: theme.bg[1] }]} />
+                    <Text style={styles.illustEmoji}>{theme.emoji}</Text>
+                    {selected && (
+                      <View style={styles.selectedCheck}>
+                        <Ionicons name="checkmark-circle" size={28} color="#fff" />
+                      </View>
+                    )}
                   </View>
-                )}
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+                  <View style={styles.illustFooter}>
+                    <Text style={[styles.illustLabel, { color: colors.foreground }]}>{theme.label}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : (
+          <View style={styles.colorsGrid}>
+            {COLORS_THEMES.map((theme) => {
+              const selected = settings.themeId === theme.id;
+              return (
+                <TouchableOpacity
+                  key={theme.id}
+                  onPress={() => handleSelect(theme.id)}
+                  activeOpacity={0.85}
+                  style={[
+                    styles.colorCard,
+                    {
+                      backgroundColor: theme.color,
+                      borderWidth: selected ? 3 : 1.5,
+                      borderColor: selected ? theme.accent : colors.border,
+                    },
+                  ]}
+                >
+                  <View style={[styles.colorCircle, { backgroundColor: theme.accent }]} />
+                  <Text style={[styles.colorLabel, { color: theme.accent }]}>{theme.label}</Text>
+                  {selected && <Ionicons name="checkmark-circle" size={20} color={theme.accent} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -82,14 +141,27 @@ export default function ThemesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, gap: 12 },
-  iconBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  title: { flex: 1, fontSize: 18, fontWeight: '700', textAlign: 'center' },
-  themeCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, padding: 16, gap: 16 },
-  palette: { flexDirection: 'row', gap: 4 },
-  swatch: { width: 28, height: 28, borderRadius: 14, borderWidth: 1 },
-  themeInfo: { flex: 1 },
-  themeName: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
-  themeDesc: { fontSize: 12 },
-  check: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  header: {
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16,
+    paddingBottom: 16, gap: 12,
+  },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { flex: 1, fontSize: 18, fontWeight: '800', color: '#fff', textAlign: 'center' },
+  doneBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  tabRow: { flexDirection: 'row', borderBottomWidth: 1, alignItems: 'center' },
+  tab: { flex: 1, alignItems: 'center', paddingVertical: 14 },
+  tabText: { fontSize: 14, fontWeight: '700' },
+  tabSep: { width: 1, height: 24 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  illustCard: { width: '31%', borderRadius: 16, overflow: 'hidden' },
+  illustBg: { height: 140, alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' },
+  illustGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, top: '40%', opacity: 0.6 },
+  illustEmoji: { fontSize: 44 },
+  selectedCheck: { position: 'absolute', top: 8, right: 8 },
+  illustFooter: { paddingVertical: 8, paddingHorizontal: 6 },
+  illustLabel: { fontSize: 12, fontWeight: '700', textAlign: 'center' },
+  colorsGrid: { gap: 10 },
+  colorCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, padding: 16, gap: 12 },
+  colorCircle: { width: 36, height: 36, borderRadius: 18 },
+  colorLabel: { flex: 1, fontSize: 15, fontWeight: '700' },
 });
