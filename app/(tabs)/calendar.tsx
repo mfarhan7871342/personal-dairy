@@ -14,7 +14,8 @@ export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
   const { entries } = useEntryStore();
   const [selected, setSelected] = useState(new Date().toISOString().split('T')[0]);
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const topPad = (Platform.OS === 'web' ? 67 : insets.top) ?? 0;
+  const bottomPad = insets.bottom ?? 0;
 
   const markedDates = useMemo(() => {
     const marks: Record<string, any> = {};
@@ -63,7 +64,7 @@ export default function CalendarScreen() {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 20 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 34 : bottomPad + 20 }}>
         {/* Calendar */}
         <View style={[styles.calendarWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Calendar

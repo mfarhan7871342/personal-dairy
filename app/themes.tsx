@@ -32,7 +32,8 @@ export default function ThemesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { settings, updateSettings } = useSettingsStore();
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const topPad = (Platform.OS === 'web' ? 67 : insets.top) ?? 0;
+  const bottomPad = insets.bottom ?? 0;
   const [tab, setTab] = useState<'illustrations' | 'colors'>('illustrations');
 
   const handleSelect = (id: string) => {
@@ -47,7 +48,10 @@ export default function ThemesScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Themes</Text>
+        <View style={styles.headerTitleContainer}>
+          <Ionicons name="color-wand" size={20} color="#fff" />
+          <Text style={styles.headerTitle}>Themes</Text>
+        </View>
         <TouchableOpacity onPress={() => router.back()} style={styles.doneBtn}>
           <Ionicons name="checkmark" size={22} color="#fff" />
         </TouchableOpacity>
@@ -59,24 +63,38 @@ export default function ThemesScreen() {
           style={[styles.tab, { borderBottomColor: tab === 'illustrations' ? colors.primary : 'transparent', borderBottomWidth: 2.5 }]}
           onPress={() => setTab('illustrations')}
         >
-          <Text style={[styles.tabText, { color: tab === 'illustrations' ? colors.primary : colors.mutedForeground }]}>
-            Illustrations
-          </Text>
+          <View style={styles.tabContent}>
+            <Ionicons 
+              name={tab === 'illustrations' ? "images" : "images-outline"} 
+              size={18} 
+              color={tab === 'illustrations' ? colors.primary : colors.mutedForeground} 
+            />
+            <Text style={[styles.tabText, { color: tab === 'illustrations' ? colors.primary : colors.mutedForeground }]}>
+              Illustrations
+            </Text>
+          </View>
         </TouchableOpacity>
         <View style={[styles.tabSep, { backgroundColor: colors.border }]} />
         <TouchableOpacity
           style={[styles.tab, { borderBottomColor: tab === 'colors' ? colors.primary : 'transparent', borderBottomWidth: 2.5 }]}
           onPress={() => setTab('colors')}
         >
-          <Text style={[styles.tabText, { color: tab === 'colors' ? colors.primary : colors.mutedForeground }]}>
-            Colors
-          </Text>
+          <View style={styles.tabContent}>
+            <Ionicons 
+              name={tab === 'colors' ? "color-palette" : "color-palette-outline"} 
+              size={18} 
+              color={tab === 'colors' ? colors.primary : colors.mutedForeground} 
+            />
+            <Text style={[styles.tabText, { color: tab === 'colors' ? colors.primary : colors.mutedForeground }]}>
+              Colors
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 12, paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 20 }}
+        contentContainerStyle={{ padding: 12, paddingBottom: Platform.OS === 'web' ? 34 : bottomPad + 20 }}
       >
         {tab === 'illustrations' ? (
           <View style={styles.grid}>
@@ -145,11 +163,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16,
     paddingBottom: 16, gap: 12,
   },
+  headerTitleContainer: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: '800', color: '#fff', textAlign: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
   doneBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   tabRow: { flexDirection: 'row', borderBottomWidth: 1, alignItems: 'center' },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 14 },
+  tabContent: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tabText: { fontSize: 14, fontWeight: '700' },
   tabSep: { width: 1, height: 24 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

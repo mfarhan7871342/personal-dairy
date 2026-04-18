@@ -20,7 +20,8 @@ export default function LockTypeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { settings, updateSettings } = useSettingsStore();
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const topPad = (Platform.OS === 'web' ? 67 : insets.top) ?? 0;
+  const bottomPad = insets.bottom ?? 0;
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [pinInput, setPinInput] = useState('');
 
@@ -55,7 +56,7 @@ export default function LockTypeScreen() {
         <View style={{ width: 38 }} />
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 20 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 34 : bottomPad + 20 }}>
         {/* Lock icon */}
         <View style={styles.lockIconWrap}>
           <View style={[styles.lockIconBg, { backgroundColor: colors.primary + '20' }]}>
@@ -71,33 +72,43 @@ export default function LockTypeScreen() {
           {LOCK_OPTIONS.map((opt, idx) => {
             const isActive = settings.lockType === opt.id;
             return (
-              <TouchableOpacity
-                key={opt.id}
-                style={[
-                  styles.optionRow,
-                  {
-                    borderBottomColor: idx < LOCK_OPTIONS.length - 1 ? colors.border : 'transparent',
-                    borderBottomWidth: idx < LOCK_OPTIONS.length - 1 ? 1 : 0,
-                    backgroundColor: isActive ? colors.primary + '10' : 'transparent',
-                  },
-                ]}
-                onPress={() => handleSelect(opt.id)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.optionIcon, { backgroundColor: isActive ? colors.primary : colors.muted }]}>
-                  <Ionicons name={opt.icon as any} size={20} color={isActive ? '#fff' : colors.mutedForeground} />
-                </View>
-                <View style={styles.optionText}>
-                  <Text style={[styles.optionLabel, { color: colors.foreground }]}>{opt.label}</Text>
-                  <Text style={[styles.optionDesc, { color: colors.mutedForeground }]}>{opt.desc}</Text>
-                </View>
-                <View style={[
-                  styles.radio,
-                  { borderColor: isActive ? colors.primary : colors.border, backgroundColor: isActive ? colors.primary : 'transparent' },
-                ]}>
-                  {isActive && <Ionicons name="checkmark" size={12} color="#fff" />}
-                </View>
-              </TouchableOpacity>
+              <View key={opt.id}>
+                <TouchableOpacity
+                  style={[
+                    styles.optionRow,
+                    {
+                      borderBottomColor: idx < LOCK_OPTIONS.length - 1 ? colors.border : 'transparent',
+                      borderBottomWidth: idx < LOCK_OPTIONS.length - 1 ? 1 : 0,
+                      backgroundColor: isActive ? colors.primary + '10' : 'transparent',
+                    },
+                  ]}
+                  onPress={() => handleSelect(opt.id)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.optionIcon, { backgroundColor: isActive ? colors.primary : colors.muted }]}>
+                    <Ionicons name={opt.icon as any} size={20} color={isActive ? '#fff' : colors.mutedForeground} />
+                  </View>
+                  <View style={styles.optionText}>
+                    <Text style={[styles.optionLabel, { color: colors.foreground }]}>{opt.label}</Text>
+                    <Text style={[styles.optionDesc, { color: colors.mutedForeground }]}>{opt.desc}</Text>
+                  </View>
+                  <View style={[
+                    styles.radio,
+                    { borderColor: isActive ? colors.primary : colors.border, backgroundColor: isActive ? colors.primary : 'transparent' },
+                  ]}>
+                    {isActive && <Ionicons name="checkmark" size={12} color="#fff" />}
+                  </View>
+                </TouchableOpacity>
+                {isActive && opt.id === 'pin' && settings.pin && (
+                  <TouchableOpacity 
+                    onPress={() => router.push('/change-pin')}
+                    style={[styles.miniChangeBtn, { borderTopColor: colors.border }]}
+                  >
+                    <Ionicons name="create-outline" size={14} color={colors.primary} />
+                    <Text style={[styles.miniChangeText, { color: colors.primary }]}>Change Current PIN</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             );
           })}
         </View>
@@ -157,4 +168,6 @@ const styles = StyleSheet.create({
   pinBtn: { flex: 1, borderRadius: 12, padding: 13, alignItems: 'center' },
   pinBtnText: { fontWeight: '700', fontSize: 14 },
   footerNote: { textAlign: 'center', fontSize: 12, marginTop: 20, paddingHorizontal: 20 },
+  miniChangeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 6, borderTopWidth: 1, backgroundColor: 'rgba(0,0,0,0.02)' },
+  miniChangeText: { fontSize: 12, fontWeight: '700' },
 });

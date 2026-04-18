@@ -46,7 +46,8 @@ export default function WriteScreen() {
   const headerDay = now.toLocaleDateString('en-US', { weekday: 'short' });
   const headerTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const topPad = (Platform.OS === 'web' ? 67 : insets.top) ?? 0;
+  const bottomPad = insets.bottom ?? 0;
 
   const handleAddPhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -192,7 +193,7 @@ export default function WriteScreen() {
       </ScrollView>
 
       {/* Toolbar */}
-      <View style={[styles.toolbar, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 8 }]}>
+      <View style={[styles.toolbar, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: Platform.OS === 'web' ? 34 : bottomPad + 8 }]}>
         <TouchableOpacity onPress={handleAddPhoto} style={styles.toolBtn}>
           <Ionicons name="image-outline" size={24} color={colors.mutedForeground} />
         </TouchableOpacity>

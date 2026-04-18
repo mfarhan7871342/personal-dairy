@@ -37,14 +37,15 @@ export default function HomeScreen() {
     router.push('/write');
   };
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const topPad = (Platform.OS === 'web' ? 67 : insets.top) ?? 0;
+  const bottomPad = insets.bottom ?? 0;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 100 : insets.bottom + 80 }}
+        contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 100 : bottomPad + 80 }}
       >
         {/* Purple gradient header */}
         <View style={[styles.header, { paddingTop: topPad + 16, backgroundColor: colors.primary }]}>

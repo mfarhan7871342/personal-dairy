@@ -43,6 +43,31 @@ export const COLORS = {
 
 export type ColorScheme = typeof COLORS.light;
 
+export const THEMES: Record<string, Partial<ColorScheme>> = {
+  lavender: { primary: '#7C3AED', secondary: '#A78BFA' },
+  midnight: { primary: '#4C1D95', secondary: '#1E1B4B', background: '#0F0620' },
+  galaxy: { primary: '#7C3AED', secondary: '#0F0620' },
+  ocean: { primary: '#0369A1', secondary: '#38BDF8' },
+  forest: { primary: '#059669', secondary: '#10B981' },
+  sunset: { primary: '#EA580C', secondary: '#FB923C' },
+  rose: { primary: '#BE185D', secondary: '#F472B6' },
+  moon: { primary: '#4F46E5', secondary: '#818CF8' },
+  peach: { primary: '#C2410C', secondary: '#FCA5A5' },
+  // Colors themes
+  white: { primary: '#7C3AED', background: '#F8F7FF' },
+  parchment: { primary: '#92400E', background: '#FDF8EE' },
+  mint: { primary: '#16A34A', background: '#F0FDF4' },
+  blush: { primary: '#E11D48', background: '#FFF1F2' },
+  sky: { primary: '#0284C7', background: '#F0F9FF' },
+  lavenderLight: { primary: '#7C3AED', background: '#FAF5FF' },
+};
+
+export function getThemeColors(scheme: 'light' | 'dark', themeId: string): ColorScheme {
+  const base = COLORS[scheme];
+  const themeOverride = THEMES[themeId] || {};
+  return { ...base, ...themeOverride };
+}
+
 export const MOOD_COLORS: Record<string, string> = {
   happy: '#FFD93D',
   sad: '#74B9FF',

@@ -101,7 +101,10 @@ export default function SettingsScreen() {
 
         {/* Quick access */}
         <View style={styles.quickRow}>
-          <TouchableOpacity onPress={() => router.push('/lock-type')} style={[styles.quickItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <TouchableOpacity 
+            onPress={() => router.push(settings.pin ? '/change-pin' : '/lock-type')} 
+            style={[styles.quickItem, { backgroundColor: colors.card, borderColor: colors.border }]}
+          >
             <View style={[styles.quickIcon, { backgroundColor: '#7C3AED20' }]}>
               <Ionicons name="lock-closed" size={22} color={colors.primary} />
             </View>
@@ -123,7 +126,10 @@ export default function SettingsScreen() {
 
         <Section title="SECURITY">
           <Row icon="lock-closed" emoji="🔒" label="Lock App" value={settings.lockType === 'none' ? 'Off' : settings.lockType} onPress={handleLock} />
-          <Row icon="keypad" emoji="🔢" label="Change Lock Type" value="" onPress={() => router.push('/lock-type')} />
+          {settings.pin ? (
+            <Row icon="keypad" emoji="🔢" label="Change PIN" value="Update code" onPress={() => router.push('/change-pin')} />
+          ) : null}
+          <Row icon="options" emoji="⚙️" label="Lock Settings" value="" onPress={() => router.push('/lock-type')} />
         </Section>
 
         <Section title="APPEARANCE">

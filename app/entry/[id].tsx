@@ -19,7 +19,8 @@ export default function EntryScreen() {
   const { getEntry, deleteEntry, toggleFavorite } = useEntryStore();
 
   const entry = getEntry(id as string);
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const topPad = (Platform.OS === 'web' ? 67 : insets.top) ?? 0;
+  const bottomPad = insets.bottom ?? 0;
 
   if (!entry) {
     return (
@@ -74,7 +75,7 @@ export default function EntryScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 20 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 34 : bottomPad + 20 }}>
         <Animated.View entering={FadeInDown.delay(50).springify()} style={styles.meta}>
           <View style={[styles.moodPill, { backgroundColor: moodColor + '20', borderColor: moodColor + '40' }]}>
             <Ionicons name={moodIcon as any} size={16} color={moodColor} />

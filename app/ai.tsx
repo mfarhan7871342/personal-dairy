@@ -86,35 +86,36 @@ export default function AIScreen() {
   const [showKeyInput, setShowKeyInput] = useState(!settings.aiApiKey);
   const flatRef = useRef<FlatList>(null);
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
-
-  const buildContext = () => {
-    const recent = entries.slice(0, 5).map((e) => `Date: ${e.createdAt.split('T')[0]}, Mood: ${e.mood}, Entry: ${e.body.substring(0, 200)}`).join('\n');
-    return `You are Roz, a warm and empathetic AI journaling companion. The user has a ${currentStreak}-day journaling streak. Here are their recent journal entries:\n\n${recent}\n\nRespond with warmth, insight, and encouragement. Keep responses concise (under 150 words).`;
-  };
-
-  const sendMessage = async (text: string) => {
-    if (!text.trim() || sending) return;
-    const key = settings.aiApiKey;
-    if (!key) { setShowKeyInput(true); return; }
-
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text.trim() };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput('');
-    setSending(true);
-
-    try {
-      const history = [...messages, userMsg].map((m) => ({ role: m.role, content: m.content }));
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-opus-4-5',
+    const topPad = (Platform.OS === 'web' ? 67 : insets.top) ?? 0;
+    const bottomPad = insets.bottom ?? 0;
+  
+    const buildContext = () => {
+      const recent = entries.slice(0, 5).map((e) => `Date: ${e.createdAt.split('T')[0]}, Mood: ${e.mood}, Entry: ${e.body.substring(0, 200)}`).join('\n');
+      return `You are Roz, a warm and empathetic AI journaling companion. The user has a ${currentStreak}-day journaling streak. Here are their recent journal entries:\n\n${recent}\n\nRespond with warmth, insight, and encouragement. Keep responses concise (under 150 words).`;
+    };
+  
+    const sendMessage = async (text: string) => {
+      if (!text.trim() || sending) return;
+      const key = settings.aiApiKey;
+      if (!key) { setShowKeyInput(true); return; }
+  
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text.trim() };
+      setMessages((prev) => [...prev, userMsg]);
+      setInput('');
+      setSending(true);
+  
+      try {
+        const history = [...messages, userMsg].map((m) => ({ role: m.role, content: m.content }));
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': key,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-3-5-sonnet-20240620',
           max_tokens: 500,
           system: buildContext(),
           messages: history,
