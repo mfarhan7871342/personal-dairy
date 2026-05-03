@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   StyleSheet, Text, View, ScrollView, TouchableOpacity,
   TextInput, Alert, Platform,
@@ -11,6 +11,7 @@ import { useColors } from '@/hooks/useColors';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useEntryStore } from '@/store/entryStore';
 import { useStreakStore } from '@/store/streakStore';
+import { registerForPushNotificationsAsync, scheduleDailyReminder, cancelReminders } from '@/utils/notifications';
 
 function Row({
   icon, emoji, label, value, onPress, danger, children,
@@ -55,10 +56,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { settings, updateSettings, lock } = useSettingsStore();
+  const { settings, updateSettings, lock, fetchSettings } = useSettingsStore();
   const { clearAll: clearEntries } = useEntryStore();
   const { resetAll: resetStreak } = useStreakStore();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleClearData = () => {
     Alert.alert('Clear All Data', 'This permanently deletes all journal entries and resets your streak.', [
@@ -77,6 +82,23 @@ export default function SettingsScreen() {
     }
     lock();
     router.replace('/lock');
+  };
+
+  const handleToggleReminder = async (enabled: boolean) => {
+    if (enabled) {
+      const granted = await registerForPushNotificationsAsync();
+      if (granted) {
+        const [h, m] = settings.reminderTime.split(':').map(Number);
+        await scheduleDailyReminder(h, m);
+        updateSettings({ reminderEnabled: true });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        Alert.alert('Permission Required', 'Please enable notifications in settings to set reminders.');
+      }
+    } else {
+      await cancelReminders();
+      updateSettings({ reminderEnabled: false });
+    }
   };
 
   return (
@@ -116,11 +138,14 @@ export default function SettingsScreen() {
             </View>
             <Text style={[styles.quickLabel, { color: colors.foreground }]}>Themes</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.quickItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <TouchableOpacity 
+            onPress={() => handleToggleReminder(!settings.reminderEnabled)} 
+            style={[styles.quickItem, { backgroundColor: colors.card, borderColor: colors.border }]}
+          >
             <View style={[styles.quickIcon, { backgroundColor: '#F59E0B20' }]}>
-              <Ionicons name="notifications" size={22} color="#F59E0B" />
+              <Ionicons name={settings.reminderEnabled ? "notifications" : "notifications-off"} size={22} color="#F59E0B" />
             </View>
-            <Text style={[styles.quickLabel, { color: colors.foreground }]}>Reminders</Text>
+            <Text style={[styles.quickLabel, { color: colors.foreground }]}>{settings.reminderEnabled ? 'Reminder On' : 'Set Reminder'}</Text>
           </TouchableOpacity>
         </View>
 

@@ -3,6 +3,7 @@ import {
   StyleSheet, Text, View, TextInput, TouchableOpacity,
   ScrollView, Alert, KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
+import { Audio } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,6 +39,10 @@ export default function WriteScreen() {
   const [colorId, setColorId] = useState('purple');
   const [saving, setSaving] = useState(false);
 
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [voiceUri, setVoiceUri] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
   const bodyRef = useRef<TextInput>(null);
   const activeColor = ENTRY_COLORS.find((c) => c.id === colorId)?.color ?? '#7C3AED';
 
@@ -65,15 +70,40 @@ export default function WriteScreen() {
     }
   };
 
+  const startRecording = async () => {
+    try {
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') return;
+
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+      setRecording(recording);
+      setIsRecording(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+    setIsRecording(false);
+    await recording.stopAndUnloadAsync();
+    const uri = recording.getURI();
+    setVoiceUri(uri);
+    setRecording(null);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
   const handleSave = async () => {
-    if (!body.trim() && !title.trim()) {
-      Alert.alert('Empty entry', 'Write something before saving.');
+    if (!body.trim() && !title.trim() && !voiceUri) {
+      Alert.alert('Empty entry', 'Write something or record a voice note before saving.');
       return;
     }
     setSaving(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const dateStr = now.toISOString().split('T')[0];
-    addEntry({ title, body, mood, photos, themeId: colorId, isFavorite: false, tags: [] });
+    addEntry({ title, body, mood, photos, themeId: colorId, isFavorite: false, tags: [], voiceUri: voiceUri || undefined });
     updateStreak(dateStr, { photos, hour: now.getHours() });
     setTimeout(() => { setSaving(false); router.back(); }, 400);
   };
@@ -197,9 +227,24 @@ export default function WriteScreen() {
         <TouchableOpacity onPress={handleAddPhoto} style={styles.toolBtn}>
           <Ionicons name="image-outline" size={24} color={colors.mutedForeground} />
         </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={isRecording ? stopRecording : startRecording} 
+          style={[styles.toolBtn, isRecording && { backgroundColor: colors.error + '20', borderRadius: 22 }]}
+        >
+          <Ionicons name={isRecording ? "stop-circle" : "mic-outline"} size={24} color={isRecording ? colors.error : colors.mutedForeground} />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/ai')} style={styles.toolBtn}>
           <Ionicons name="sparkles" size={24} color={colors.primary} />
         </TouchableOpacity>
+        {voiceUri && (
+          <View style={styles.voiceBadge}>
+            <Ionicons name="volume-medium" size={14} color={colors.primary} />
+            <Text style={[styles.voiceText, { color: colors.primary }]}>Voice attached</Text>
+            <TouchableOpacity onPress={() => setVoiceUri(null)}>
+              <Ionicons name="close" size={14} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={{ flex: 1 }} />
         <Text style={[styles.charCount, { color: colors.mutedForeground }]}>{body.length} chars</Text>
       </View>
@@ -236,4 +281,6 @@ const styles = StyleSheet.create({
   toolbar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 10, borderTopWidth: 1, gap: 4 },
   toolBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   charCount: { fontSize: 12, marginRight: 8 },
+  voiceBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.05)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, marginLeft: 8 },
+  voiceText: { fontSize: 11, fontWeight: '700' },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet, Text, View, TextInput, TouchableOpacity,
   FlatList, KeyboardAvoidingView, Platform, ActivityIndicator,
@@ -74,7 +74,11 @@ export default function AIScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { settings, updateSettings } = useSettingsStore();
-  const { entries } = useEntryStore();
+  const { entries, fetchEntries } = useEntryStore();
+
+  useEffect(() => {
+    fetchEntries();
+  }, [fetchEntries]);
   const { currentStreak } = useStreakStore();
 
   const [messages, setMessages] = useState<Message[]>([

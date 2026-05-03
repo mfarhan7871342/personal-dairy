@@ -15,7 +15,7 @@ export function QuoteCard() {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.openQuote}>"</Text>
+      <Text style={styles.openQuote}>&quot;</Text>
       {loading ? (
         <ActivityIndicator size="small" color="#fff" style={{ marginVertical: 12 }} />
       ) : (
@@ -24,7 +24,7 @@ export function QuoteCard() {
           <Text style={styles.author}>— {quote?.author}</Text>
         </>
       )}
-      <Text style={styles.closeQuote}>"</Text>
+      <Text style={styles.closeQuote}>&quot;</Text>
     </View>
   );
 }

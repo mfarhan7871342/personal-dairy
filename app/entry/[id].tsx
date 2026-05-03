@@ -4,6 +4,7 @@ import {
   Alert, Image, Platform,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Audio } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,8 +20,19 @@ export default function EntryScreen() {
   const { getEntry, deleteEntry, toggleFavorite } = useEntryStore();
 
   const entry = getEntry(id as string);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
   const topPad = (Platform.OS === 'web' ? 67 : insets.top) ?? 0;
   const bottomPad = insets.bottom ?? 0;
+
+  React.useEffect(() => {
+    return sound
+      ? () => {
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
 
   if (!entry) {
     return (
@@ -58,6 +70,36 @@ export default function EntryScreen() {
   const handleFavorite = () => {
     toggleFavorite(entry.id);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const playSound = async () => {
+    if (!entry.voiceUri) return;
+    try {
+      if (sound) {
+        if (isPlaying) {
+          await sound.pauseAsync();
+          setIsPlaying(false);
+        } else {
+          await sound.playAsync();
+          setIsPlaying(true);
+        }
+      } else {
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          { uri: entry.voiceUri },
+          { shouldPlay: true }
+        );
+        setSound(newSound);
+        setIsPlaying(true);
+        newSound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            setIsPlaying(false);
+            newSound.setPositionAsync(0);
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Error playing sound', e);
+    }
   };
 
   return (
@@ -108,6 +150,25 @@ export default function EntryScreen() {
           </Animated.View>
         )}
 
+        {entry.voiceUri && (
+          <Animated.View entering={FadeInDown.delay(225).springify()} style={styles.voiceSection}>
+            <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Voice Note</Text>
+            <TouchableOpacity onPress={playSound} style={[styles.voicePlayer, { backgroundColor: colors.primary + '15', borderColor: colors.primary + '30' }]}>
+              <View style={[styles.playBtn, { backgroundColor: colors.primary }]}>
+                <Ionicons name={isPlaying ? "pause" : "play"} size={18} color="#fff" style={{ marginLeft: isPlaying ? 0 : 2 }} />
+              </View>
+              <View style={styles.voiceWave}>
+                <View style={[styles.waveLine, { backgroundColor: colors.primary }]} />
+                <View style={[styles.waveLine, { backgroundColor: colors.primary, height: 16 }]} />
+                <View style={[styles.waveLine, { backgroundColor: colors.primary, height: 24 }]} />
+                <View style={[styles.waveLine, { backgroundColor: colors.primary, height: 12 }]} />
+                <View style={[styles.waveLine, { backgroundColor: colors.primary }]} />
+              </View>
+              <Text style={[styles.voiceLabel, { color: colors.primary }]}>{isPlaying ? "Playing..." : "Play Note"}</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
         <Animated.View entering={FadeInDown.delay(250).springify()} style={[styles.statsRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.stat}>
             <Text style={[styles.statNum, { color: colors.primary }]}>{entry.body.split(/\s+/).filter(Boolean).length}</Text>
@@ -154,4 +215,10 @@ const styles = StyleSheet.create({
   statDivider: { width: 1 },
   notFound: { fontSize: 15, marginTop: 12 },
   backBtn: { marginTop: 16, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
+  voiceSection: { paddingHorizontal: 20, marginBottom: 20 },
+  voicePlayer: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 16, borderWidth: 1, gap: 12 },
+  playBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  voiceWave: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 },
+  waveLine: { width: 3, height: 8, borderRadius: 2 },
+  voiceLabel: { fontSize: 12, fontWeight: '700' },
 });

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, Platform, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Rect, Text as SvgText, Circle, Path } from 'react-native-svg';
@@ -45,7 +45,11 @@ function MoodBarChart({ data }: { data: Record<string, number> }) {
 export default function MoodScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { entries } = useEntryStore();
+  const { entries, fetchEntries } = useEntryStore();
+
+  useEffect(() => {
+    fetchEntries();
+  }, [fetchEntries]);
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
 
   const stats = useMemo(() => {

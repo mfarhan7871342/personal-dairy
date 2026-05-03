@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
@@ -12,10 +12,14 @@ import { MOOD_COLORS, MOOD_EMOJIS } from '@/constants/colors';
 export default function CalendarScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { entries } = useEntryStore();
+  const { entries, fetchEntries } = useEntryStore();
   const [selected, setSelected] = useState(new Date().toISOString().split('T')[0]);
   const topPad = (Platform.OS === 'web' ? 67 : insets.top) ?? 0;
   const bottomPad = insets.bottom ?? 0;
+
+  useEffect(() => {
+    fetchEntries();
+  }, [fetchEntries]);
 
   const markedDates = useMemo(() => {
     const marks: Record<string, any> = {};

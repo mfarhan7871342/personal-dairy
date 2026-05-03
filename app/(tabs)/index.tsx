@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   StyleSheet, Text, View, ScrollView, TouchableOpacity,
   RefreshControl, Platform,
@@ -16,7 +16,7 @@ import { QuoteCard } from '@/components/QuoteCard';
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { entries } = useEntryStore();
+  const { entries, fetchEntries } = useEntryStore();
   const { currentStreak, totalEntries } = useStreakStore();
   const [refreshing, setRefreshing] = useState(false);
   const [quoteKey, setQuoteKey] = useState(0);
@@ -26,11 +26,16 @@ export default function HomeScreen() {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  const onRefresh = useCallback(() => {
+  useEffect(() => {
+    fetchEntries();
+  }, []);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     setQuoteKey((k) => k + 1);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    await fetchEntries();
+    setRefreshing(false);
+  }, [fetchEntries]);
 
   const handleWrite = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

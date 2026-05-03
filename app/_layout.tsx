@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -9,7 +9,7 @@ import { useFonts, PlayfairDisplay_400Regular, PlayfairDisplay_700Bold, Playfair
 import 'react-native-reanimated';
 
 import { useSettingsStore } from '@/store/settingsStore';
-import { router } from 'expo-router';
+import { useAuthStore } from '@/store/authStore';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -18,6 +18,7 @@ export const unstable_settings = { initialRouteName: '(tabs)' };
 export default function RootLayout() {
   const scheme = useColorScheme();
   const { settings } = useSettingsStore();
+  const { isAuthenticated } = useAuthStore();
   const [appIsReady, setAppIsReady] = useState(false);
 
   const [fontsLoaded] = useFonts({
@@ -33,8 +34,10 @@ export default function RootLayout() {
           setAppIsReady(true);
           await SplashScreen.hideAsync();
           
-          // Execute security check after fonts are ready
-          if (settings.isLocked && settings.lockType !== 'none') {
+          // Authentication & Security Check
+          if (!isAuthenticated) {
+            router.replace('/(auth)/login');
+          } else if (settings.isLocked && settings.lockType !== 'none') {
             router.replace('/lock');
           }
         }
@@ -43,7 +46,7 @@ export default function RootLayout() {
       }
     }
     prepare();
-  }, [fontsLoaded]);
+  }, [fontsLoaded, isAuthenticated]);
 
   if (!appIsReady) {
     return null;
@@ -53,6 +56,8 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+          <Stack.Screen name="(auth)/login" />
+          <Stack.Screen name="(auth)/signup" />
           <Stack.Screen name="index" />
           <Stack.Screen name="lock" />
           <Stack.Screen name="lock-type" options={{ animation: 'slide_from_right' }} />

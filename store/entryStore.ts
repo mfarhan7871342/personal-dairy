@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../utils/api';
 
 export type MoodType = 'happy' | 'sad' | 'anxious' | 'excited' | 'calm' | 'angry' | 'grateful' | 'neutral';
 
@@ -21,48 +22,66 @@ export interface DiaryEntry {
 
 interface EntryStore {
   entries: DiaryEntry[];
-  addEntry: (entry: Omit<DiaryEntry, 'id' | 'createdAt' | 'updatedAt'>) => string;
-  updateEntry: (id: string, updates: Partial<DiaryEntry>) => void;
-  deleteEntry: (id: string) => void;
+  loading: boolean;
+  fetchEntries: () => Promise<void>;
+  addEntry: (entry: Omit<DiaryEntry, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  updateEntry: (id: string, updates: Partial<DiaryEntry>) => Promise<void>;
+  deleteEntry: (id: string) => Promise<void>;
   getEntry: (id: string) => DiaryEntry | undefined;
   getEntriesForDate: (date: string) => DiaryEntry[];
   getRecentEntries: (limit: number) => DiaryEntry[];
-  toggleFavorite: (id: string) => void;
+  toggleFavorite: (id: string) => Promise<void>;
   clearAll: () => void;
 }
 
-const generateId = () => Date.now().toString() + Math.random().toString(36).substr(2, 9);
+const mapBackendEntry = (e: any): DiaryEntry => ({
+  ...e,
+  id: e._id,
+});
 
 export const useEntryStore = create<EntryStore>()(
   persist(
     (set, get) => ({
       entries: [],
-      addEntry: (entry) => {
-        const id = generateId();
-        const now = new Date().toISOString();
-        const newEntry: DiaryEntry = { ...entry, id, createdAt: now, updatedAt: now };
-        set((state) => ({ entries: [newEntry, ...state.entries] }));
-        return id;
+      loading: false,
+      fetchEntries: async () => {
+        set({ loading: true });
+        try {
+          const response = await api.get('/entries');
+          const mappedEntries = response.data.map(mapBackendEntry);
+          set({ entries: mappedEntries });
+        } catch (error) {
+          console.error('Failed to fetch entries', error);
+        } finally {
+          set({ loading: false });
+        }
       },
-      updateEntry: (id, updates) => {
+      addEntry: async (entry) => {
+        const response = await api.post('/entries', entry);
+        const newEntry = mapBackendEntry(response.data);
+        set((state) => ({ entries: [newEntry, ...state.entries] }));
+        return newEntry.id;
+      },
+      updateEntry: async (id, updates) => {
+        const response = await api.put(`/entries/${id}`, updates);
+        const updatedEntry = mapBackendEntry(response.data);
         set((state) => ({
-          entries: state.entries.map((e) =>
-            e.id === id ? { ...e, ...updates, updatedAt: new Date().toISOString() } : e
-          ),
+          entries: state.entries.map((e) => (e.id === id ? updatedEntry : e)),
         }));
       },
-      deleteEntry: (id) => {
+      deleteEntry: async (id) => {
+        await api.delete(`/entries/${id}`);
         set((state) => ({ entries: state.entries.filter((e) => e.id !== id) }));
       },
       getEntry: (id) => get().entries.find((e) => e.id === id),
       getEntriesForDate: (date) =>
         get().entries.filter((e) => e.createdAt.startsWith(date)),
       getRecentEntries: (limit) => get().entries.slice(0, limit),
-      toggleFavorite: (id) => {
+      toggleFavorite: async (id) => {
+        const response = await api.patch(`/entries/${id}/favorite`);
+        const updatedEntry = mapBackendEntry(response.data);
         set((state) => ({
-          entries: state.entries.map((e) =>
-            e.id === id ? { ...e, isFavorite: !e.isFavorite } : e
-          ),
+          entries: state.entries.map((e) => (e.id === id ? updatedEntry : e)),
         }));
       },
       clearAll: () => set({ entries: [] }),
